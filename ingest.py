@@ -33,7 +33,7 @@ Accessibility: {row['Accessibility']}"""
     with open("data/vector_store.json", "w", encoding="utf-8") as f:
         json.dump({"chunks": chunks, "embeddings": embeddings}, f)
     
-    print("✓ Vector store created successfully!")
+    print("Vector store created successfully!")
 
 if __name__ == "__main__":
     asyncio.run(ingest_csv())
