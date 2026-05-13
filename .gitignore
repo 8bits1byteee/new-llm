@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+.env
+data/vector_store.json
+venv/
+.venv/
