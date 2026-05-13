@@ -1,5 +1,4 @@
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
@@ -30,7 +29,6 @@ memory = ConversationMemory()
 class ChatRequest(BaseModel):
     message: str
     session_id: str = None
-    stream: bool = False
 
 class ChatResponse(BaseModel):
     response: str
@@ -42,34 +40,12 @@ async def chat(request: ChatRequest):
         session_id = request.session_id or str(uuid.uuid4())
         
         query_embedding = await embedder.embed([request.message])
-        context, is_full_list = retriever.retrieve(request.message, query_embedding[0])
+        context, is_full_list = retriever.retrieve(query_embedding[0])
         
         if not context:
             response_text = "I don't have information about that in my restaurant database. Could you ask about restaurants in Estancia, Iloilo?"
-            if request.stream:
-                async def token_stream():
-                    yield response_text
-                    memory.add_message(session_id, "user", request.message)
-                    memory.add_message(session_id, "assistant", response_text)
-
-                headers = {"X-Session-Id": session_id}
-                return StreamingResponse(token_stream(), media_type="text/plain", headers=headers)
         else:
             history = memory.get_history(session_id)
-            if request.stream:
-                async def token_stream():
-                    collected = []
-                    async for token in chain.generate_stream(request.message, context, history, is_full_list):
-                        collected.append(token)
-                        yield token
-
-                    full_text = "".join(collected)
-                    memory.add_message(session_id, "user", request.message)
-                    memory.add_message(session_id, "assistant", full_text)
-
-                headers = {"X-Session-Id": session_id}
-                return StreamingResponse(token_stream(), media_type="text/plain", headers=headers)
-
             response_text = await chain.generate(request.message, context, history, is_full_list)
         
         memory.add_message(session_id, "user", request.message)
