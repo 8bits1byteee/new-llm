@@ -56,6 +56,10 @@ async def chat(request: ChatRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/")
+async def root():
+    return {"message": "Restaurant RAG Chatbot API", "endpoints": ["/chat", "/health"]}
+
 @app.get("/health")
 async def health():
     return {"status": "healthy"}
