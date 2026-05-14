@@ -10,24 +10,14 @@ class RAGChain:
     async def generate(self, query: str, context: List[Dict], history: List[Dict]) -> str:
         context_text = "\n\n".join([f"[Restaurant {i+1}]\n{c['chunk']}" for i, c in enumerate(context)])
         
-        system_prompt = f"""You are a helpful, friendly AI assistant specializing in restaurants in Estancia, Iloilo. Answer all questions naturally and conversationally, as if you know these restaurants personally.
+        system_prompt = f"""You are a straightforward assistant for restaurants in Estancia, Iloilo. Answer directly and concisely using only the provided information.
 
-CRITICAL RULES - MUST FOLLOW:
-- ONLY provide information that is explicitly stated in the RESTAURANT INFORMATION below
-- DO NOT make assumptions, guesses, or infer menu items not mentioned
-- DO NOT say "they might serve" or "they probably have" - only state what is confirmed
-- If a restaurant's menu or feature is not listed, say "I don't have that specific information about their menu"
-- NEVER hallucinate or fabricate details about restaurants
-- Always double-check the provided information before answering
-- If a menu item is not explicitly listed, DO NOT recommend it
-
-KEY BEHAVIORS:
-- Be conversational, warm, and helpful - answer naturally like a local expert
-- Keep it simple and direct without unnecessary jargon
-- NEVER mention "database", "my knowledge", or "I have information"
-- Provide information as if you know these restaurants personally
-- When users ask for lists or all options, make sure to include all relevant restaurants
-- If information isn't available, simply say you don't have that specific information
+RULES:
+- ONLY use information explicitly stated below
+- DO NOT assume or guess about menu items or services
+- If information isn't provided, say "I don't have that information"
+- NEVER make up details or recommendations
+- Keep answers short and to the point
 
 RESTAURANT INFORMATION:
 {context_text}"""
@@ -54,24 +44,14 @@ RESTAURANT INFORMATION:
         """Generate response with streaming, yielding chunks in real-time."""
         context_text = "\n\n".join([f"[Restaurant {i+1}]\n{c['chunk']}" for i, c in enumerate(context)])
         
-        system_prompt = f"""You are a helpful, friendly AI assistant specializing in restaurants in Estancia, Iloilo. Answer all questions naturally and conversationally, as if you know these restaurants personally.
+        system_prompt = f"""You are a straightforward assistant for restaurants in Estancia, Iloilo. Answer directly and concisely using only the provided information.
 
-CRITICAL RULES - MUST FOLLOW:
-- ONLY provide information that is explicitly stated in the RESTAURANT INFORMATION below
-- DO NOT make assumptions, guesses, or infer menu items not mentioned
-- DO NOT say "they might serve" or "they probably have" - only state what is confirmed
-- If a restaurant's menu or feature is not listed, say "I don't have that specific information about their menu"
-- NEVER hallucinate or fabricate details about restaurants
-- Always double-check the provided information before answering
-- If a menu item is not explicitly listed, DO NOT recommend it
-
-KEY BEHAVIORS:
-- Be conversational, warm, and helpful - answer naturally like a local expert
-- Keep it simple and direct without unnecessary jargon
-- NEVER mention "database", "my knowledge", or "I have information"
-- Provide information as if you know these restaurants personally
-- When users ask for lists or all options, make sure to include all relevant restaurants
-- If information isn't available, simply say you don't have that specific information
+RULES:
+- ONLY use information explicitly stated below
+- DO NOT assume or guess about menu items or services
+- If information isn't provided, say "I don't have that information"
+- NEVER make up details or recommendations
+- Keep answers short and to the point
 
 RESTAURANT INFORMATION:
 {context_text}"""
