@@ -1,7 +1,6 @@
 import json
 import numpy as np
-from typing import List, Dict, Tuple
-import re
+from typing import List, Dict
 
 class Retriever:
     def __init__(self, vector_store_path: str):
@@ -13,24 +12,14 @@ class Retriever:
     def cosine_similarity(self, a: np.ndarray, b: np.ndarray) -> float:
         return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
     
-    def detect_full_list_query(self, query: str) -> bool:
-        patterns = [
-            r'\ball\b', r'\bevery\b', r'\bcomplete\b', r'\bfull\b', r'\bentire\b',
-            r'\blist\b', r'\bshow me\b', r'\bgive me\b', r'\bwhat are\b'
-        ]
-        return any(re.search(p, query.lower()) for p in patterns)
-    
-    def retrieve(self, query_embedding: List[float], query: str = "", top_k: int = 10, threshold: float = 0.2) -> Tuple[List[Dict], bool]:
+    def retrieve(self, query_embedding: List[float], threshold: float = 0.1) -> List[Dict]:
+        """Retrieve all restaurants above similarity threshold, sorted by relevance."""
         query_vec = np.array(query_embedding)
         scores = [self.cosine_similarity(query_vec, emb) for emb in self.embeddings]
         
-        is_full_list = self.detect_full_list_query(query)
+        # Get all results above threshold, sorted by score (descending)
+        relevant_pairs = [(i, scores[i]) for i in range(len(scores)) if scores[i] > threshold]
+        relevant_pairs.sort(key=lambda x: x[1], reverse=True)
         
-        if is_full_list:
-            relevant_indices = [i for i, score in enumerate(scores) if score > threshold]
-            results = [{"chunk": self.chunks[i], "score": scores[i]} for i in relevant_indices]
-        else:
-            top_indices = np.argsort(scores)[-top_k:][::-1]
-            results = [{"chunk": self.chunks[i], "score": scores[i]} for i in top_indices if scores[i] > threshold]
-        
-        return results, is_full_list
+        results = [{"chunk": self.chunks[i], "score": score} for i, score in relevant_pairs]
+        return results

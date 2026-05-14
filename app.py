@@ -40,13 +40,13 @@ async def chat(request: ChatRequest):
         session_id = request.session_id or str(uuid.uuid4())
         
         query_embedding = await embedder.embed([request.message])
-        context, is_full_list = retriever.retrieve(query_embedding[0], query=request.message)
+        context = retriever.retrieve(query_embedding[0])
         
         if not context:
             response_text = "I don't have information about that in my restaurant database. Could you ask about restaurants in Estancia, Iloilo?"
         else:
             history = memory.get_history(session_id)
-            response_text = await chain.generate(request.message, context, history, is_full_list)
+            response_text = await chain.generate(request.message, context, history)
         
         memory.add_message(session_id, "user", request.message)
         memory.add_message(session_id, "assistant", response_text)
