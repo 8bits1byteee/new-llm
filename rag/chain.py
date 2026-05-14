@@ -18,6 +18,8 @@ RULES:
 - If information isn't provided, say "I don't have that information"
 - NEVER make up details or recommendations
 - Keep answers short and to the point
+- If only ONE restaurant has the information, say exactly which one (e.g., "Cafe Anteiku serves fries") - DO NOT say "some restaurants"
+- If MULTIPLE restaurants have it, then you can say "some" or name them all
 
 RESTAURANT INFORMATION:
 {context_text}"""
@@ -52,6 +54,8 @@ RULES:
 - If information isn't provided, say "I don't have that information"
 - NEVER make up details or recommendations
 - Keep answers short and to the point
+- If only ONE restaurant has the information, say exactly which one (e.g., "Cafe Anteiku serves fries") - DO NOT say "some restaurants"
+- If MULTIPLE restaurants have it, then you can say "some" or name them all
 
 RESTAURANT INFORMATION:
 {context_text}"""
