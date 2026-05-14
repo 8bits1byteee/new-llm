@@ -17,13 +17,19 @@ Description: {row['Description']}
 Address: {row['Address']}
 Phone: {row['Phone']}
 Email: {row['Email']}
+Facebook Name: {row['Facebook Name']}
+Facebook URL: {row['Facebook URL']}
 Hours: {row['Operating Hours']}
 Services: {row['Service Options']}
+Reservation: {row['Reservation']}
 Price Range: {row['Price Range']}
 Menu Highlights: {row['Menu']}
 Capacity: {row['Seating Capacity']}
+Parking: {row['Parking']}
+WiFi: {row['WiFi']}
 Payment: {row['Payment Methods']}
-Accessibility: {row['Accessibility']}"""
+Accessibility: {row['Accessibility']}
+Location: Lat {row['Latitude']}, Long {row['Longitude']}"""
         chunks.append(chunk)
     
     embedder = JinaEmbedder()
