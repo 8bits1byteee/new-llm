@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from dotenv import load_dotenv
 import uuid
@@ -34,7 +35,7 @@ class ChatResponse(BaseModel):
     response: str
     session_id: str
 
-@app.post("/chat", response_model=ChatResponse)
+@app.post("/chat", response_class=StreamingResponse)
 async def chat(request: ChatRequest):
     try:
         session_id = request.session_id or str(uuid.uuid4())
@@ -43,15 +44,22 @@ async def chat(request: ChatRequest):
         context = retriever.retrieve(query_embedding[0])
         
         if not context:
-            response_text = "I don't have information about that in my restaurant database. Could you ask about restaurants in Estancia, Iloilo?"
-        else:
-            history = memory.get_history(session_id)
-            response_text = await chain.generate(request.message, context, history)
+            async def error_response():
+                yield "I don't have information about that in my restaurant database. Could you ask about restaurants in Estancia, Iloilo?"
+            return StreamingResponse(error_response(), media_type="text/event-stream")
         
+        history = memory.get_history(session_id)
         memory.add_message(session_id, "user", request.message)
-        memory.add_message(session_id, "assistant", response_text)
         
-        return ChatResponse(response=response_text, session_id=session_id)
+        async def generate():
+            full_response = ""
+            async for chunk in chain.generate_stream(request.message, context, history):
+                full_response += chunk
+                yield chunk
+            # Store complete response in memory
+            memory.add_message(session_id, "assistant", full_response)
+        
+        return StreamingResponse(generate(), media_type="text/event-stream")
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

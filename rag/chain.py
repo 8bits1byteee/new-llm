@@ -1,6 +1,6 @@
 import httpx
 import os
-from typing import List, Dict
+from typing import List, Dict, AsyncGenerator
 
 class RAGChain:
     def __init__(self):
@@ -8,6 +8,14 @@ class RAGChain:
         self.url = "https://api.groq.com/openai/v1/chat/completions"
         
     async def generate(self, query: str, context: List[Dict], history: List[Dict]) -> str:
+        """Non-streaming version for backward compatibility."""
+        response_text = ""
+        async for chunk in self.generate_stream(query, context, history):
+            response_text += chunk
+        return response_text
+    
+    async def generate_stream(self, query: str, context: List[Dict], history: List[Dict]) -> AsyncGenerator[str, None]:
+        """Stream the generated response token by token."""
         context_text = "\n\n".join([f"[Restaurant {i+1}]\n{c['chunk']}" for i, c in enumerate(context)])
         
         system_prompt = f"""You are a helpful, friendly AI assistant specializing in restaurants in Estancia, Iloilo. You provide accurate information based on your knowledge database.
@@ -35,15 +43,29 @@ RESTAURANT DATABASE:
         messages.append({"role": "user", "content": query})
         
         async with httpx.AsyncClient(timeout=60.0) as client:
-            response = await client.post(
+            async with client.stream(
+                "POST",
                 self.url,
                 headers={"Authorization": f"Bearer {self.api_key}"},
                 json={
                     "model": "llama-3.3-70b-versatile",
                     "messages": messages,
                     "temperature": 0.7,
-                    "max_tokens": 2000
+                    "max_tokens": 2000,
+                    "stream": True
                 }
-            )
-            response.raise_for_status()
-            return response.json()["choices"][0]["message"]["content"]
+            ) as response:
+                response.raise_for_status()
+                async for line in response.aiter_lines():
+                    if line.startswith("data: "):
+                        data_str = line[6:].strip()
+                        if data_str and data_str != "[DONE]":
+                            try:
+                                import json
+                                data = json.loads(data_str)
+                                if "choices" in data and len(data["choices"]) > 0:
+                                    delta = data["choices"][0].get("delta", {})
+                                    if "content" in delta:
+                                        yield delta["content"]
+                            except:
+                                pass
