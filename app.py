@@ -79,13 +79,13 @@ async def chat_stream(request: ChatRequest):
                     yield f"data: {json.dumps({'chunk': response_text, 'done': True})}\n\n"
                 else:
                     history = memory.get_history(session_id)
-                    # Stream each chunk immediately as it arrives, with small delay between chunks for visual effect
+                    # Stream each chunk immediately as it arrives, with delay between chunks for smooth streaming effect
                     async for chunk in chain.generate_stream(request.message, context, history):
                         full_response += chunk
                         # Send chunk immediately - no buffering
                         yield f"data: {json.dumps({'chunk': chunk, 'done': False})}\n\n"
-                        # Small delay to allow client to render - optional, remove if too slow
-                        await asyncio.sleep(0.001)
+                        # Delay to make streaming visible (increase for slower streaming)
+                        await asyncio.sleep(0.05)
                     
                     # Send completion signal
                     yield f"data: {json.dumps({'chunk': '', 'done': True})}\n\n"
