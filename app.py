@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 import uuid
 import os
 import json
+import asyncio
 from rag.embedder import JinaEmbedder
 from rag.retriever import Retriever
 from rag.chain import RAGChain
@@ -61,7 +62,7 @@ async def chat(request: ChatRequest):
 
 @app.post("/chat/stream")
 async def chat_stream(request: ChatRequest):
-    """Streaming endpoint - responses are streamed in real-time like ChatGPT using SSE."""
+    """Streaming endpoint - responses stream 1 by 1 like ChatGPT using Server-Sent Events."""
     try:
         session_id = request.session_id or str(uuid.uuid4())
         
@@ -74,13 +75,19 @@ async def chat_stream(request: ChatRequest):
                 if not context:
                     response_text = "I don't have information about that in my restaurant database. Could you ask about restaurants in Estancia, Iloilo?"
                     full_response = response_text
+                    # Send without buffering
                     yield f"data: {json.dumps({'chunk': response_text, 'done': True})}\n\n"
                 else:
                     history = memory.get_history(session_id)
+                    # Stream each chunk immediately as it arrives, with small delay between chunks for visual effect
                     async for chunk in chain.generate_stream(request.message, context, history):
                         full_response += chunk
+                        # Send chunk immediately - no buffering
                         yield f"data: {json.dumps({'chunk': chunk, 'done': False})}\n\n"
+                        # Small delay to allow client to render - optional, remove if too slow
+                        await asyncio.sleep(0.001)
                     
+                    # Send completion signal
                     yield f"data: {json.dumps({'chunk': '', 'done': True})}\n\n"
             except Exception as e:
                 full_response = ""
@@ -89,7 +96,17 @@ async def chat_stream(request: ChatRequest):
             if full_response:
                 memory.add_message(session_id, "assistant", full_response)
         
-        return StreamingResponse(response_generator(), media_type="text/event-stream")
+        # Return with headers that disable buffering
+        return StreamingResponse(
+            response_generator(),
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache, no-store, max-age=0",
+                "Connection": "keep-alive",
+                "X-Accel-Buffering": "no",
+                "X-Content-Type-Options": "nosniff"
+            }
+        )
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
