@@ -76,7 +76,8 @@ RESTAURANT DATABASE:
         messages.extend(history)
         messages.append({"role": "user", "content": query})
         
-        async with httpx.AsyncClient(timeout=60.0) as client:
+        import json
+        async with httpx.AsyncClient(timeout=300.0) as client:
             async with client.stream(
                 "POST",
                 self.url,
@@ -89,16 +90,18 @@ RESTAURANT DATABASE:
                     "stream": True
                 }
             ) as response:
-                response.raise_for_status()
                 async for line in response.aiter_lines():
-                    if line.startswith("data:"):
+                    if line and line.startswith("data:"):
                         try:
-                            import json
-                            data = json.loads(line[5:].strip())
-                            if data.get("choices") and len(data["choices"]) > 0:
-                                delta = data["choices"][0].get("delta", {})
-                                content = delta.get("content", "")
-                                if content:
-                                    yield content
+                            json_str = line[5:].strip()
+                            if json_str and json_str != "[DONE]":
+                                data = json.loads(json_str)
+                                if data.get("choices") and len(data["choices"]) > 0:
+                                    choice = data["choices"][0]
+                                    if choice.get("finish_reason") is None:
+                                        delta = choice.get("delta", {})
+                                        content = delta.get("content", "")
+                                        if content:
+                                            yield content
                         except:
                             pass
