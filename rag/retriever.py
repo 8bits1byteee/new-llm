@@ -20,11 +20,11 @@ class Retriever:
         ]
         return any(re.search(p, query.lower()) for p in patterns)
     
-    def retrieve(self, query_embedding: List[float], top_k: int = 10, threshold: float = 0.2) -> Tuple[List[Dict], bool]:
+    def retrieve(self, query_embedding: List[float], query: str = "", top_k: int = 10, threshold: float = 0.2) -> Tuple[List[Dict], bool]:
         query_vec = np.array(query_embedding)
         scores = [self.cosine_similarity(query_vec, emb) for emb in self.embeddings]
         
-        is_full_list = self.detect_full_list_query("")
+        is_full_list = self.detect_full_list_query(query)
         
         if is_full_list:
             relevant_indices = [i for i, score in enumerate(scores) if score > threshold]
