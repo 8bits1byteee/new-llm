@@ -47,7 +47,7 @@ async def chat(request: ChatRequest):
         context = retriever.retrieve(query_embedding[0])
         
         if not context:
-            response_text = "I don't have information about that in my restaurant database. Could you ask about restaurants in Estancia, Iloilo?"
+            response_text = "I'm not sure about that. Could you ask about restaurants in Estancia, Iloilo?"
         else:
             history = memory.get_history(session_id)
             response_text = await chain.generate(request.message, context, history)
@@ -73,7 +73,7 @@ async def chat_stream(request: ChatRequest):
             full_response = ""
             try:
                 if not context:
-                    response_text = "I don't have information about that in my restaurant database. Could you ask about restaurants in Estancia, Iloilo?"
+                    response_text = "I'm not sure about that. Could you ask about restaurants in Estancia, Iloilo?"
                     full_response = response_text
                     # Send without buffering
                     yield f"data: {json.dumps({'chunk': response_text, 'done': True})}\n\n"
