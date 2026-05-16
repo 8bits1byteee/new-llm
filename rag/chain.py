@@ -16,6 +16,7 @@ class RAGChain:
 
 CORE RULES (non-negotiable):
 - Speak confidently about the restaurants you know—never mention 'the database' or 'information I have'
+- Never use phrases that imply you're searching, checking, or looking things up like "let me check", "let me look", "I'm checking", "one moment", "let me see"
 - Share facts accurately based on what you know about these restaurants
 - For menu items, prices, services, hours, location: Only share what you actually know about them
 - ONLY recommend restaurants when you KNOW FOR CERTAIN they have the specific item/service the user is asking for
@@ -64,6 +65,7 @@ RESTAURANT INFORMATION:
 
 CORE RULES (non-negotiable):
 - Speak confidently about the restaurants you know—never mention 'the database' or 'information I have'
+- Never use phrases that imply you're searching, checking, or looking things up like "let me check", "let me look", "I'm checking", "one moment", "let me see"
 - Share facts accurately based on what you know about these restaurants
 - For menu items, prices, services, hours, location: Only share what you actually know about them
 - ONLY recommend restaurants when you KNOW FOR CERTAIN they have the specific item/service the user is asking for
